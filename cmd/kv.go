@@ -25,43 +25,43 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var sql = &cobra.Command{
-	Use:   "sql",
-	Short: "Start a sql server.",
-	Long:  `Start a sql server.`,
-	Run:   runSQL,
+var kv = &cobra.Command{
+	Use:   "kv",
+	Short: "Start a kv server.",
+	Long:  `Start a kv server.`,
+	Run:   runKV,
 }
 
-type sqlType struct {
+type kvType struct {
 	Endpoint string
-	Addr     string
+	Dir      string
 	ValSize  int
 }
 
-var sqlParam sqlType
+var kvParam kvType
 
 func init() {
-	rootCmd.AddCommand(sql)
-	sql.PersistentFlags().StringVar(&sqlParam.Endpoint, "endpoint", "0.0.0.0:8080", "kv-sql server endpoint")
-	sql.PersistentFlags().IntVar(&sqlParam.ValSize, "size", 512, "value size")
-	sql.PersistentFlags().StringVar(&sqlParam.Addr, "mysql", "root:123456@tcp(127.0.0.1:3306)/kv?charset=utf8", "mysql address")
+	rootCmd.AddCommand(kv)
+	kv.PersistentFlags().StringVar(&kvParam.Endpoint, "endpoint", "0.0.0.0:8080", "kv-sql server endpoint")
+	kv.PersistentFlags().IntVar(&kvParam.ValSize, "size", 512, "value size")
+	kv.PersistentFlags().StringVar(&kvParam.Dir, "dir", "/tmp/rocksdb", "rocksdb dir")
 }
 
-func runSQL(cmd *cobra.Command, args []string) {
-	glog.Infoln("start a sql server")
+func runKV(cmd *cobra.Command, args []string) {
+	glog.Infoln("start a kv server")
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	global.SetStoreType("sql")
-	global.ValSize = sqlParam.ValSize
-	objSQL, err := store.NewObjectMap(sqlParam.Addr, 200, 10)
+	global.SetStoreType("kv")
+	global.ValSize = kvParam.ValSize
+	objKV, err := store.NewKVMap(kvParam.Dir)
 	if err != nil {
-		glog.Fatalf("failed to init mysql: %v", err)
+		glog.Fatalf("failed to init rocksdb: %v", err)
 	}
-	global.KVSQL = objSQL
+	global.KVSQL = objKV
 
 	router := service.RegistAPIRouter()
 
-	if err := http.ListenAndServe(sqlParam.Endpoint, router); err != nil {
+	if err := http.ListenAndServe(kvParam.Endpoint, router); err != nil {
 		glog.Fatalf("service fail to serve: %v", err)
 	}
 }

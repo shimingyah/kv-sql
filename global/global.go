@@ -31,8 +31,8 @@ const (
 var backend StoreType
 
 var (
-	// ObjectSQL mysql backend
-	ObjectSQL *store.ObjectMap
+	// KVSQL rocksdb mysql
+	KVSQL store.Store
 
 	// ValSize value size
 	ValSize int

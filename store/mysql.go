@@ -29,13 +29,6 @@ type ObjectMap struct {
 	db *sql.DB
 }
 
-// Object struct
-type Object struct {
-	BucketName string
-	ObjectKey  string
-	Meta       string
-}
-
 // NewObjectMap return object map
 func NewObjectMap(addr string, maxConn, maxIdle int) (*ObjectMap, error) {
 	db, err := sql.Open("mysql", addr)

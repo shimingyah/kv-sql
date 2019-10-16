@@ -30,12 +30,10 @@ func PutObject(w http.ResponseWriter, r *http.Request) {
 	object := vars["object"]
 	meta := pkg.RandomString(global.ValSize)
 
-	if global.IsSQL() {
-		if err := global.ObjectSQL.PutObject(bucket, object, meta); err != nil {
-			glog.Errorf("failed to put object, backend: %s, error: %v", global.GetStoreType(), err)
-			writeErrorResponse(w, r)
-			return
-		}
+	if err := global.KVSQL.PutObject(bucket, object, meta); err != nil {
+		glog.Errorf("failed to put object, backend: %s, error: %v", global.GetStoreType(), err)
+		writeErrorResponse(w, r)
+		return
 	}
 
 	writeSuccessResponse(w, r, nil)
@@ -47,16 +45,15 @@ func GetObject(w http.ResponseWriter, r *http.Request) {
 	bucket := vars["bucket"]
 	object := vars["object"]
 
-	if global.IsSQL() {
-		obj, err := global.ObjectSQL.GetObject(bucket, object)
-		if err != nil {
-			glog.Errorf("failed to get object, backend: %s, error: %v", global.GetStoreType(), err)
-			writeErrorResponse(w, r)
-			return
-		}
-		writeSuccessResponse(w, r, []byte(obj.Meta))
+	obj, err := global.KVSQL.GetObject(bucket, object)
+	if err != nil {
+		glog.Errorf("failed to get object, backend: %s, error: %v", global.GetStoreType(), err)
+		writeErrorResponse(w, r)
 		return
 	}
+
+	writeSuccessResponse(w, r, []byte(obj.Meta))
+
 }
 
 // DeleteObject delete object
@@ -65,12 +62,10 @@ func DeleteObject(w http.ResponseWriter, r *http.Request) {
 	bucket := vars["bucket"]
 	object := vars["object"]
 
-	if global.IsSQL() {
-		if err := global.ObjectSQL.DeleteObject(bucket, object); err != nil {
-			glog.Errorf("failed to delete object, backend: %s, error: %v", global.GetStoreType(), err)
-			writeErrorResponse(w, r)
-			return
-		}
+	if err := global.KVSQL.DeleteObject(bucket, object); err != nil {
+		glog.Errorf("failed to delete object, backend: %s, error: %v", global.GetStoreType(), err)
+		writeErrorResponse(w, r)
+		return
 	}
 
 	writeSuccessResponse(w, r, nil)
